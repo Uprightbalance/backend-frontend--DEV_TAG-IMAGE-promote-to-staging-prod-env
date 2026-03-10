@@ -40,5 +40,6 @@ jobs:
           git add .
 
           git commit -m "promote backend $DEV_TAG to staging" || echo "No changes to commit"
+          git pull origin main --rebase
 
           git push origin main
