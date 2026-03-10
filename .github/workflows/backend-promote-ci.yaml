@@ -6,17 +6,18 @@ on:
       - main
 
 permissions:
-  id-token: write
   contents: write
 
 jobs:
   promote:
-
     runs-on: ubuntu-latest
 
     steps:
 
-      - name: Promote Backend to Staging
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Promote Backend Image
         env:
           GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
         run: |
@@ -25,13 +26,19 @@ jobs:
 
           git remote set-url origin https://$GITOPS_TOKEN@github.com/Uprightbalance/gitops-repo.git
 
-          DEV_TAG=$(grep newTag k8s/backend/dev/kustomization.yaml | awk '{print $2}')
+          DEV_TAG=$(grep "newTag:" k8s/backend/dev/kustomization.yaml | awk '{print $2}')
+          echo "Dev tag: $DEV_TAG"
 
-          sed -i "s/newTag:.*/newTag: $DEV_TAG/" k8s/backend/staging/kustomization.yaml
+          sed -i "s|newTag:.*|newTag: $DEV_TAG|" k8s/backend/staging/kustomization.yaml
+
+          echo "Updated staging file:"
+          cat k8s/backend/staging/kustomization.yaml
 
           git config user.email "uprightojieh316@gmail.com"
           git config user.name "github-actions"
 
-          git commit -am "promote backend $DEV_TAG to staging"
+          git add .
+
+          git commit -m "promote backend $DEV_TAG to staging" || echo "No changes to commit"
 
           git push origin main
