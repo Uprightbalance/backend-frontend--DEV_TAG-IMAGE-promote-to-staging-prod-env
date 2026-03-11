@@ -26,20 +26,20 @@ jobs:
 
           git remote set-url origin https://$GITOPS_TOKEN@github.com/Uprightbalance/gitops-repo.git
 
-          DEV_TAG=$(grep "newTag:" k8s/backend/dev/kustomization.yaml | awk '{print $2}')
+          DEV_TAG=$(grep "newTag:" k8s/backend/staging/kustomization.yaml | awk '{print $2}')
           echo "Dev tag: $DEV_TAG"
 
-          sed -i "s|newTag:.*|newTag: $DEV_TAG|" k8s/backend/staging/kustomization.yaml
+          sed -i "s|newTag:.*|newTag: $DEV_TAG|" k8s/backend/prod/kustomization.yaml
 
-          echo "Updated staging file:"
-          cat k8s/backend/staging/kustomization.yaml
+          echo "Updated prod file:"
+          cat k8s/backend/prod/kustomization.yaml
 
           git config user.email "uprightojieh316@gmail.com"
           git config user.name "github-actions"
 
           git add .
 
-          git commit -m "promote backend $DEV_TAG to staging" || echo "No changes to commit"
+          git commit -m "promote backend $DEV_TAG to prod" || echo "No changes to commit"
           git pull origin main --rebase
 
           git push origin main
