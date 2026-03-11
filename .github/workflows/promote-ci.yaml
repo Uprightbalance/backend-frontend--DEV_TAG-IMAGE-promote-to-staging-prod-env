@@ -1,6 +1,7 @@
-name: Promote Services to Prod
+---
+name: Promote Services to Staging
 
-on:
+"on":
   push:
     branches:
       - main
@@ -13,7 +14,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-
       - name: Checkout Repository
         uses: actions/checkout@v4
 
@@ -21,48 +21,33 @@ jobs:
         env:
           GITOPS_TOKEN: ${{ secrets.GITOPS_TOKEN }}
         run: |
-
           git clone https://github.com/Uprightbalance/gitops-repo.git
           cd gitops-repo
 
-          git remote set-url origin https://$GITOPS_TOKEN@github.com/Uprightbalance/gitops-repo.git
+          git remote set-url origin \
+          https://$GITOPS_TOKEN@github.com/Uprightbalance/gitops-repo.git
 
-          #################################
-          # BACKEND PROMOTION
-          #################################
+          BACKEND_TAG=$(grep "newTag:" \
+          k8s/backend/dev/kustomization.yaml | awk '{print $2}')
 
-          BACKEND_TAG=$(grep "newTag:" k8s/backend/dev/kustomization.yaml | awk '{print $2}')
-          echo "Backend dev tag: $BACKEND_TAG"
+          FRONTEND_TAG=$(grep "newTag:" \
+          k8s/frontend/dev/kustomization.yaml | awk '{print $2}')
 
-          sed -i "s|newTag:.*|newTag: $BACKEND_TAG|" k8s/backend/staging/kustomization.yaml
+          sed -i "s|newTag:.*|newTag: $BACKEND_TAG|" \
+          k8s/backend/staging/kustomization.yaml
 
-          echo "Updated backend staging file:"
-          cat k8s/backend/staging/kustomization.yaml
-
-          #################################
-          # FRONTEND PROMOTION
-          #################################
-
-          FRONTEND_TAG=$(grep "newTag:" k8s/frontend/dev/kustomization.yaml | awk '{print $2}')
-          echo "Frontend dev tag: $FRONTEND_TAG"
-
-          sed -i "s|newTag:.*|newTag: $FRONTEND_TAG|" k8s/frontend/staging/kustomization.yaml
-
-          echo "Updated frontend staging file:"
-          cat k8s/frontend/staging/kustomization.yaml
-
-          #################################
-          # COMMIT + PUSH
-          #################################
+          sed -i "s|newTag:.*|newTag: $FRONTEND_TAG|" \
+          k8s/frontend/staging/kustomization.yaml
 
           git config user.email "uprightojieh316@gmail.com"
           git config user.name "github-actions"
 
           git add .
 
-          git commit -m "promote backend $BACKEND_TAG and frontend $FRONTEND_TAG to staging || echo "No changes to commit"
+          git commit -m \
+          "promote backend $BACKEND_TAG and frontend $FRONTEND_TAG to staging" \
+          || echo "No changes to commit"
 
-         # retry push in case of concurrent workflow conflicts
           for i in {1..5}; do
             git pull origin main --rebase
             git push origin main && break
