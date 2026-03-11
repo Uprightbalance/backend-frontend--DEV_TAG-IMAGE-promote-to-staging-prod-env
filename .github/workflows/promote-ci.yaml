@@ -28,16 +28,16 @@ jobs:
           https://$GITOPS_TOKEN@github.com/Uprightbalance/gitops-repo.git
 
           BACKEND_TAG=$(grep "newTag:" \
-          k8s/backend/dev/kustomization.yaml | awk '{print $2}')
+          k8s/backend/staging/kustomization.yaml | awk '{print $2}')
 
           FRONTEND_TAG=$(grep "newTag:" \
-          k8s/frontend/dev/kustomization.yaml | awk '{print $2}')
+          k8s/frontend/staging/kustomization.yaml | awk '{print $2}')
 
           sed -i "s|newTag:.*|newTag: $BACKEND_TAG|" \
-          k8s/backend/staging/kustomization.yaml
+          k8s/backend/prod/kustomization.yaml
 
           sed -i "s|newTag:.*|newTag: $FRONTEND_TAG|" \
-          k8s/frontend/staging/kustomization.yaml
+          k8s/frontend/prod/kustomization.yaml
 
           git config user.email "uprightojieh316@gmail.com"
           git config user.name "github-actions"
@@ -45,7 +45,7 @@ jobs:
           git add .
 
           git commit -m \
-          "promote backend $BACKEND_TAG and frontend $FRONTEND_TAG to staging" \
+          "promote backend $BACKEND_TAG and frontend $FRONTEND_TAG to prod" \
           || echo "No changes to commit"
 
           for i in {1..5}; do
